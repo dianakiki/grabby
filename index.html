@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-     <title>Kawaii Claw — v.1.0.2.3</title>
+     <title>Kawaii Claw — v.1.0.2.4</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
@@ -36,7 +36,8 @@
         }
 
         .version-text {
-        style="font-size: 20px;
+            style="font-size: 20px;
+            color: #fff;
         }
 
         #start-screen {
@@ -141,7 +142,7 @@
     <button class="btn-start-img" onclick="startGame()">
         <img src="image/button_start.png" alt="Start">
     </button>
-        <div class="version-text">v.1.0.2.3</div>
+        <div class="version-text">v.1.0.2.4</div>
 </div>
 
 <div class="machine-wrapper">
@@ -212,6 +213,16 @@
         document.getElementById('start-screen').classList.remove('hidden');
     }
 
+function triggerWin() {
+        winMsg.style.display = 'block';
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#ff00ff', '#ffffff', '#ff0055']
+        });
+    }
+
     async function dropClaw() {
         if (isBusy) return;
         isBusy = true;
@@ -269,16 +280,6 @@
         }
 
         isBusy = false;
-    }
-
-        function triggerWin() {
-        winMsg.style.display = 'block';
-        confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#ff00ff', '#ffffff', '#ff0055']
-        });
     }
 
     document.getElementById('dropBtn').onclick = dropClaw;
