@@ -263,6 +263,16 @@
         isBusy = false;
     }
 
+        function triggerWin() {
+        winMsg.style.display = 'block';
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#ff00ff', '#ffffff', '#ff0055']
+        });
+    }
+
     document.getElementById('dropBtn').onclick = dropClaw;
 
     function handleJoy(x) {
