@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kawaii Claw — v.1.0.1</title>
+    <title>Kawaii Claw — v.1.0.2</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         :root { 
-            --toy-size: 95px;
+            --toy-size: 90px;
             --claw-size: 110px;
             --panel-h: 170px;
         }
@@ -29,9 +29,7 @@
         .btn-start-img { width: 120px; height: auto; background: none; border: none; cursor: pointer; transition: transform 0.1s; }
         .btn-start-img img { width: 100%; height: auto; }
         .btn-start-img:active { transform: scale(0.9); }
-
-        /* ТЕКСТ ВЕРСИИ */
-        .version-text { color: rgba(255, 255, 255, 0.4); font-size: 12px; margin-top: 20px; pointer-events: none; }
+        .version-text { color: rgba(255, 255, 255, 0.4); font-size: 12px; margin-top: 20px; }
 
         @keyframes floating { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
         #start-screen.hidden { opacity: 0; visibility: hidden; }
@@ -48,9 +46,9 @@
         /* ИГРОВАЯ ЗОНА */
         .game-area { flex: 1; position: relative; background: url('image/background.png') no-repeat center/contain; background-color: #2c0e3a; overflow: hidden; }
 
-        /* Внутренний короб (настрой left/right под свой фон) */
+        /* Внутренний короб (игрушки не выходят за эти рамки) */
         .toys-inner-box {
-            position: absolute; bottom: 0; left: 12%; right: 12%; height: 160px; pointer-events: none;
+            position: absolute; bottom: 0; left: 15%; right: 15%; height: 160px; pointer-events: none;
         }
 
         /* КЛЕШНЯ */
@@ -63,7 +61,7 @@
         .claw-hand { width: var(--claw-size); height: var(--claw-size); background: url('image/claw_open.png') no-repeat center/contain; margin-top: -5px; }
         .claw-hand.closed { background-image: url('image/claw_close.png'); }
 
-        .prize { position: absolute; width: var(--toy-size); height: var(--toy-size); background-size: contain; background-repeat: no-repeat; z-index: 5; bottom: 10px; }
+        .prize { position: absolute; width: var(--toy-size); height: var(--toy-size); background-size: contain; background-repeat: no-repeat; z-index: 5; transition: bottom 1.2s cubic-bezier(0.45, 0.05, 0.55, 0.95), left 1s ease-in-out; }
 
         /* УПРАВЛЕНИЕ */
         .controls { height: var(--panel-h); background: #1a0825; display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom, 15px); }
@@ -87,7 +85,7 @@
     <button class="btn-start-img" onclick="startGame()">
         <img src="image/button_start.png" alt="Start">
     </button>
-    <div class="version-text">v.1.0.1</div>
+    <div class="version-text">v.1.0.2</div>
 </div>
 
 <div class="machine-wrapper">
@@ -138,14 +136,20 @@
         winOverlay.style.display = 'none';
         
         const boxWidth = toysBox.offsetWidth;
-        const toyW = 95; 
-        const spacing = (boxWidth - toyW) / (toyFiles.length - 1);
+        const toyW = 90; 
 
         toyFiles.forEach((img, i) => {
             const t = document.createElement('div');
             t.className = 'prize';
             t.style.backgroundImage = `url('image/${img}')`;
-            t.style.left = (i * spacing) + 'px';
+            
+            // РАНДОМНОЕ РАСПОЛОЖЕНИЕ ВНУТРИ КОРОБА
+            // Рассчитываем случайную позицию X, чтобы они не вылезали за края
+            const randomX = Math.random() * (boxWidth - toyW);
+            const randomY = Math.random() * 20; // Небольшой разброс по высоте
+
+            t.style.left = randomX + 'px';
+            t.style.bottom = (10 + randomY) + 'px';
             toysBox.appendChild(t);
         });
     }
@@ -176,40 +180,56 @@
         prizes.forEach(p => {
             const pRect = p.getBoundingClientRect();
             const hRect = hand.getBoundingClientRect();
-            if (Math.abs((pRect.left + pRect.width/2) - (hRect.left + hRect.width/2)) < 48) caught = p;
+            // Хватаем ту, что ближе всего к центру клешни
+            if (Math.abs((pRect.left + pRect.width/2) - (hRect.left + hRect.width/2)) < 45) caught = p;
         });
 
         hand.classList.add('closed');
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
         await new Promise(r => setTimeout(r, 400));
 
+        // ПОДЪЕМ
         claw.style.transform = `translateX(-50%) translateY(0px)`;
         if (caught) {
-            caught.style.transition = "bottom 1.2s cubic-bezier(0.45, 0.05, 0.55, 0.95)";
             caught.style.bottom = (area.offsetHeight - 150) + "px";
         }
         await new Promise(r => setTimeout(r, 1300));
 
         if (caught) {
+            // ОТВОЗ В ДЫРУ
             claw.style.transition = "left 1s ease-in-out, transform 0.1s";
             clawX = 60; claw.style.left = "60px";
-            caught.style.transition = "left 1s ease-in-out, bottom 1.2s";
             caught.style.left = "25px";
-            await new Promise(r => setTimeout(r, 1000));
+            await new Promise(r => setTimeout(r, 1050));
 
             hand.classList.remove('closed');
             if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            
             caught.style.transition = "none";
             caught.style.animation = "falling 0.8s forwards";
             
             score++;
             scoreText.innerText = score;
+
             setTimeout(() => {
                 caught.remove();
-                if (score >= toyFiles.length) triggerWin();
+                // ПРОВЕРКА: Если игрушек больше нет в контейнере
+                if (document.querySelectorAll('.prize').length === 0) {
+                    triggerWin();
+                }
             }, 800);
         }
         isBusy = false;
+    }
+
+    function triggerWin() {
+        winOverlay.style.display = 'flex';
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#ff00ff', '#ffffff', '#ff0055']
+        });
     }
 
     document.getElementById('dropBtn').onclick = dropClaw;
@@ -226,10 +246,9 @@
             joy.className = 'joystick right';
         }
         
-        const boxRect = toysBox.getBoundingClientRect();
-        // Лимиты четко по границам короба
-        const minX = boxRect.left + 35;
-        const maxX = boxRect.right - 35;
+        const limit = area.offsetWidth;
+        const minX = 40;
+        const maxX = limit - 40;
 
         if (clawX < minX) clawX = minX;
         if (clawX > maxX) clawX = maxX;
