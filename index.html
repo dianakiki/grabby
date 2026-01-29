@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kawaii Claw — v.1.0.5</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
@@ -88,6 +87,7 @@
             background-repeat: no-repeat;
             z-index: 5;
             bottom: 25px; /* Немного приподнял над нижним краем */
+            transition: bottom 1.2s cubic-bezier(0.45, 0.05, 0.55, 0.95), left 1s ease-in-out;
         }
 
         /* УПРАВЛЕНИЕ */
@@ -116,7 +116,7 @@
     <button class="btn-start-img" onclick="startGame()">
         <img src="image/button_start.png" alt="Start">
     </button>
-        <div class="version-text">v.1.0.2.5</div>
+        <div class="version-text">v.1.0.2.6</div>
 </div>
 
 <div class="machine-wrapper">
@@ -235,6 +235,18 @@
             }
         }); // Проверяем, поймали ли игрушку
 
+        if (caught) {
+            const areaRect = area.getBoundingClientRect();
+            const toyRect = caught.getBoundingClientRect();
+            const bottomInArea = areaRect.bottom - toyRect.bottom;
+            const leftInArea = toyRect.left - areaRect.left;
+
+            caught.style.transition = "bottom 1.2s cubic-bezier(0.45, 0.05, 0.55, 0.95), left 1s ease-in-out";
+            caught.style.bottom = bottomInArea + "px";
+            caught.style.left = leftInArea + "px";
+            area.appendChild(caught);
+        }
+
         hand.classList.add('closed'); // Закрываем клешню
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); // Вибрация
         await new Promise(r => setTimeout(r, 400)); // Ждем
@@ -242,7 +254,7 @@
         // ПОДЪЕМ
         claw.style.transform = `translateX(-50%) translateY(0px)`; // Поднимаемся вверх
         if (caught) {
-            caught.style.bottom = (area.offsetHeight - 150) + "px"; // Игрушка поднимается с клешней
+            caught.style.bottom = (area.offsetHeight - 145) + "px"; // Игрушка плавно поднимается вместе с клешней
         }
         await new Promise(r => setTimeout(r, 1300)); // Ждем подъема
 
