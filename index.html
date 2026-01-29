@@ -44,7 +44,7 @@
         .score-board { background: rgba(0, 0, 0, 0.5); padding: 5px 12px; border-radius: 10px; color: #fff; border: 2px solid #ff00ff; font-size: 14px; }
 
         /* ИГРОВАЯ ЗОНА */
-        .game-area { flex: 1; position: relative; background: url('image/background.png') no-repeat center/contain; background-color: #2c0e3a; overflow: hidden; }
+        .game-area { flex: 1; position: relative; background: url('image/background.png') no-repeat center/cover; background-color: #2c0e3a; overflow: hidden; }
 
         /* Внутренний короб (игрушки не выходят за эти рамки) */
         .toys-inner-box {
@@ -71,7 +71,7 @@
         .btn-drop { width: 105px; height: 105px; background: url('image/button_drop.png') no-repeat center/contain; border: none; cursor: pointer; }
 
         /* ПОБЕДА */
-        #win-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.6); z-index: 200; pointer-events: none; }
+        #win-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.6); z-index: 200; pointer-events: auto; }
         .win-img { width: 80%; max-width: 280px; animation: popIn 0.5s cubic-bezier(0.17, 0.89, 0.32, 1.49); }
 
         @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -113,14 +113,18 @@
 </div>
 
 <script>
+    // Инициализация Telegram Web App
     const tg = window.Telegram.WebApp;
-    tg.expand();
+    tg.expand(); // Расширить на весь экран
 
+    // Массив файлов изображений игрушек
     const toyFiles = ['cute_toy_1.png', 'cute_toy_2.png', 'cute_toy_3.png', 'cute_toy_4.png', 'cute_toy_5.png', 'cute_toy_6.png', 'cute_toy_7.png'];
+    // Начальная позиция клешни по X, флаг занятости, счет
     let clawX = window.innerWidth / 2;
     let isBusy = false;
     let score = 0;
 
+    // Получение элементов DOM
     const claw = document.getElementById('claw');
     const hand = document.getElementById('hand');
     const area = document.getElementById('area');
@@ -129,16 +133,22 @@
     const scoreText = document.getElementById('score');
     const winOverlay = document.getElementById('win-overlay');
 
+    // Функция спавна игрушек в коробе
     function spawn() {
+        // Очищаем короб от предыдущих игрушек
         toysBox.innerHTML = '';
+        // Сбрасываем счет, скрываем победный экран
         score = 0;
         scoreText.innerText = score;
         winOverlay.style.display = 'none';
         
+        // Ширина короба, ширина игрушки
         const boxWidth = toysBox.offsetWidth;
         const toyW = 90; 
 
+        // Для каждой игрушки
         toyFiles.forEach((img, i) => {
+            // Создаем div для игрушки, устанавливаем класс и изображение
             const t = document.createElement('div');
             t.className = 'prize';
             t.style.backgroundImage = `url('image/${img}')`;
@@ -150,100 +160,121 @@
 
             t.style.left = randomX + 'px';
             t.style.bottom = (10 + randomY) + 'px';
+            // Добавляем игрушку в короб
             toysBox.appendChild(t);
         });
     }
 
+    // Функция начала игры
     function startGame() {
+        // Скрываем стартовый экран, спавним игрушки, вибрация
         document.getElementById('start-screen').classList.add('hidden');
         spawn();
         if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy');
     }
 
+    // Функция возврата в меню
     function backToMenu() {
         document.getElementById('start-screen').classList.remove('hidden');
     }
 
+    // Асинхронная функция падения клешни
     async function dropClaw() {
-        if (isBusy) return;
-        isBusy = true;
-        hand.classList.remove('closed');
+        if (isBusy) return; // Если клешня уже занята, выходим
+        isBusy = true; // Устанавливаем флаг занятости
+        hand.classList.remove('closed'); // Открываем клешню
         
-        const dropDist = area.offsetHeight - 185;
+        const dropDist = area.offsetHeight - 185; // Расстояние падения
         claw.style.transition = "transform 1.2s cubic-bezier(0.45, 0.05, 0.55, 0.95)";
-        claw.style.transform = `translateX(-50%) translateY(${dropDist}px)`;
+        claw.style.transform = `translateX(-50%) translateY(${dropDist}px)`; // Падаем вниз
 
-        await new Promise(r => setTimeout(r, 1200));
+        await new Promise(r => setTimeout(r, 1200)); // Ждем завершения анимации падения
 
         const prizes = document.querySelectorAll('.prize');
         let caught = null;
+        let closestDist = Infinity;
         prizes.forEach(p => {
             const pRect = p.getBoundingClientRect();
             const hRect = hand.getBoundingClientRect();
-            // Хватаем ту, что ближе всего к центру клешни
-            if (Math.abs((pRect.left + pRect.width/2) - (hRect.left + hRect.width/2)) < 45) caught = p;
-        });
+            const dist = Math.abs((pRect.left + pRect.width / 2) - (hRect.left + hRect.width / 2));
+            // Запоминаем игрушку, которая находится максимально близко к центру клешни
+            if (dist < 45 && dist < closestDist) {
+                closestDist = dist;
+                caught = p;
+            }
+        }); // Проверяем, поймали ли игрушку
 
-        hand.classList.add('closed');
-        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
-        await new Promise(r => setTimeout(r, 400));
+        hand.classList.add('closed'); // Закрываем клешню
+        if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); // Вибрация
+        await new Promise(r => setTimeout(r, 400)); // Ждем
 
         // ПОДЪЕМ
-        claw.style.transform = `translateX(-50%) translateY(0px)`;
+        claw.style.transform = `translateX(-50%) translateY(0px)`; // Поднимаемся вверх
         if (caught) {
-            caught.style.bottom = (area.offsetHeight - 150) + "px";
+            caught.style.bottom = (area.offsetHeight - 150) + "px"; // Игрушка поднимается с клешней
         }
-        await new Promise(r => setTimeout(r, 1300));
+        await new Promise(r => setTimeout(r, 1300)); // Ждем подъема
 
         if (caught) {
             // ОТВОЗ В ДЫРУ
             claw.style.transition = "left 1s ease-in-out, transform 0.1s";
-            clawX = 60; claw.style.left = "60px";
-            caught.style.left = "25px";
+            clawX = 60; claw.style.left = "60px"; // Перемещаем клешню влево
+            caught.style.left = "25px"; // Игрушка тоже
             await new Promise(r => setTimeout(r, 1050));
 
-            hand.classList.remove('closed');
-            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            hand.classList.remove('closed'); // Открываем клешню
+            if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success'); // Успешная вибрация
             
             caught.style.transition = "none";
-            caught.style.animation = "falling 0.8s forwards";
+            caught.style.animation = "falling 0.8s forwards"; // Анимация падения
             
-            score++;
+            score++; // Увеличиваем счет
             scoreText.innerText = score;
 
             setTimeout(() => {
-                caught.remove();
+                caught.remove(); // Удаляем игрушку
+                console.log('Remaining toys:', document.querySelectorAll('.prize').length);
                 // ПРОВЕРКА: Если игрушек больше нет в контейнере
                 if (document.querySelectorAll('.prize').length === 0) {
-                    triggerWin();
+                    triggerWin(); // Победа
                 }
             }, 800);
         }
-        isBusy = false;
+        isBusy = false; // Снимаем флаг занятости
     }
 
+    // Функция победы
     function triggerWin() {
-        winOverlay.style.display = 'flex';
+        console.log('Triggering win');
+        winOverlay.style.display = 'flex'; // Показываем оверлей победы
         confetti({
             particleCount: 150,
             spread: 70,
             origin: { y: 0.6 },
             colors: ['#ff00ff', '#ffffff', '#ff0055']
-        });
+        }); // Запускаем конфетти
     }
 
+    // Назначаем функцию падения на кнопку
     document.getElementById('dropBtn').onclick = dropClaw;
 
+    // Обработчик клика на оверлей победы для перезапуска
+    winOverlay.onclick = () => {
+        winOverlay.style.display = 'none';
+        spawn();
+    };
+
+    // Функция обработки джойстика
     function handleJoy(x) {
-        if (isBusy) return;
+        if (isBusy) return; // Если занято, выходим
         const rect = joy.getBoundingClientRect();
         const mid = rect.left + rect.width / 2;
         if (x < mid - 15) {
             clawX -= 8;
-            joy.className = 'joystick left';
+            joy.className = 'joystick left'; // Влево
         } else if (x > mid + 15) {
             clawX += 8;
-            joy.className = 'joystick right';
+            joy.className = 'joystick right'; // Вправо
         }
         
         const limit = area.offsetWidth;
@@ -251,13 +282,14 @@
         const maxX = limit - 40;
 
         if (clawX < minX) clawX = minX;
-        if (clawX > maxX) clawX = maxX;
-        claw.style.left = clawX + 'px';
+        if (clawX > maxX) clawX = maxX; // Ограничения позиции
+        claw.style.left = clawX + 'px'; // Обновляем позицию клешни
     }
 
-    joy.addEventListener('touchstart', (e) => { e.preventDefault(); });
-    window.addEventListener('touchend', () => { joy.className = 'joystick'; });
-    window.addEventListener('touchmove', (e) => { handleJoy(e.touches[0].clientX); });
+    // Обработчики событий джойстика
+    joy.addEventListener('touchstart', (e) => { e.preventDefault(); }); // Предотвращаем стандартное поведение
+    window.addEventListener('touchend', () => { joy.className = 'joystick'; }); // Сбрасываем класс джойстика
+    window.addEventListener('touchmove', (e) => { handleJoy(e.touches[0].clientX); }); // Обработка движения джойстика
 
 </script>
 </body>
