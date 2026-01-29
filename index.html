@@ -8,8 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         :root { 
-            --toy-size: 90px;
-            --claw-size: 110px;
+            --toy-size: 95px; /* Игрушки стали больше */
+            --claw-size: 115px;
             --panel-h: 170px;
         }
 
@@ -53,15 +53,42 @@
 
         /* КЛЕШНЯ */
         .claw-system {
-            position: absolute; top: -450px; left: 50%; width: var(--claw-size);
-            transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 10;
+            position: absolute;
+            top: -450px;
+            left: 50%;
+            width: var(--claw-size);
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
             transition: transform 1.2s cubic-bezier(0.45, 0.05, 0.55, 0.95), left 0.1s linear;
         }
-        .claw-rope { width: 18px; height: 500px; background: url('image/chain.png') repeat-y center/contain; }
-        .claw-hand { width: var(--claw-size); height: var(--claw-size); background: url('image/claw_open.png') no-repeat center/contain; margin-top: -5px; }
+
+        .claw-rope {
+            width: 18px;
+            height: 500px;
+            background: url('image/chain.png') repeat-y center/contain;
+        }
+
+        .claw-hand {
+            width: var(--claw-size);
+            height: var(--claw-size);
+            background: url('image/claw_open.png') no-repeat center/contain;
+            margin-top: -5px;
+        }
         .claw-hand.closed { background-image: url('image/claw_close.png'); }
 
-        .prize { position: absolute; width: var(--toy-size); height: var(--toy-size); background-size: contain; background-repeat: no-repeat; z-index: 5; transition: bottom 1.2s cubic-bezier(0.45, 0.05, 0.55, 0.95), left 1s ease-in-out; }
+        /* Игрушки */
+        .prize {
+            position: absolute;
+            width: var(--toy-size);
+            height: var(--toy-size);
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: 5;
+            bottom: 25px; /* Немного приподнял над нижним краем */
+        }
 
         /* УПРАВЛЕНИЕ */
         .controls { height: var(--panel-h); background: #1a0825; display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom, 15px); }
@@ -71,8 +98,12 @@
         .btn-drop { width: 105px; height: 105px; background: url('image/button_drop.png') no-repeat center/contain; border: none; cursor: pointer; }
 
         /* ПОБЕДА */
-        #win-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.6); z-index: 200; pointer-events: auto; }
-        .win-img { width: 80%; max-width: 280px; animation: popIn 0.5s cubic-bezier(0.17, 0.89, 0.32, 1.49); }
+        #win-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.6); z-index: 200; pointer-events: none;
+        }
+        .win-img { width: 85%; max-width: 300px; animation: popIn 0.5s cubic-bezier(0.17, 0.89, 0.32, 1.49); }
 
         @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         @keyframes falling { to { transform: translateY(800px) rotate(45deg); opacity: 0; } }
@@ -85,7 +116,7 @@
     <button class="btn-start-img" onclick="startGame()">
         <img src="image/button_start.png" alt="Start">
     </button>
-    <div class="version-text">v.1.0.2</div>
+        <div class="version-text">v.1.0.2.5</div>
 </div>
 
 <div class="machine-wrapper">
